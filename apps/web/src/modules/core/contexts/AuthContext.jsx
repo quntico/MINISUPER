@@ -1,27 +1,65 @@
-
-// ⚠️ MODO DESARROLLO: Autenticación deshabilitada temporalmente
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import pb from '@/lib/pocketbaseClient.js';
+import { toast } from 'sonner';
 
 export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  // Mock methods that return null/undefined and log warnings
-  const mockMethod = (methodName) => async (...args) => {
-    console.warn(`⚠️ MODO DESARROLLO: El método de autenticación '${methodName}' está deshabilitado temporalmente.`);
-    return null;
+  const [user, setUser] = useState(pb.authStore.model);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    // Sincronizar el estado del usuario cuando cambie PocketBase
+    return pb.authStore.onChange((token, model) => {
+      setUser(model);
+    });
+  }, []);
+
+  const login = async (email, password) => {
+    setIsLoading(true);
+    try {
+      const authData = await pb.collection('users').authWithPassword(email, password);
+      toast.success('¡Bienvenido de nuevo!');
+      return authData;
+    } catch (error) {
+      toast.error('Error al iniciar sesión: ' + error.message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (data) => {
+    setIsLoading(true);
+    try {
+      const user = await pb.collection('users').create({
+        ...data,
+        emailVisibility: true,
+      });
+      // Iniciar sesión automático tras registro opcionalmente o redirigir
+      return user;
+    } catch (error) {
+      toast.error('Error al registrarse: ' + error.message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = () => {
+    pb.authStore.clear();
+    setUser(null);
+    window.location.href = '/login';
   };
 
   return (
     <AuthContext.Provider value={{ 
-      user: null, 
-      isAuthenticated: false, 
-      isLoading: false, 
-      error: null,
-      login: mockMethod('login'), 
-      register: mockMethod('register'), 
-      logout: mockMethod('logout'),
-      changePassword: mockMethod('changePassword'),
-      forgotPassword: mockMethod('forgotPassword')
+      user, 
+      isAuthenticated: !!user, 
+      isLoading, 
+      login, 
+      register, 
+      logout 
     }}>
       {children}
     </AuthContext.Provider>
