@@ -1,0 +1,16 @@
+
+export const APP_CONFIG = {
+  APP_NAME: 'MINISUPER SaaS',
+  VERSION: '2.0.0',
+  DEFAULT_CURRENCY: 'MXN',
+  DEFAULT_LOCALE: 'es-MX',
+  PAGINATION: {
+    DEFAULT_PER_PAGE: 20,
+    MAX_PER_PAGE: 100
+  },
+  FEATURES: {
+    ENABLE_AI: true,
+    ENABLE_WHATSAPP: true,
+    ENABLE_PWA: true
+  }
+};
