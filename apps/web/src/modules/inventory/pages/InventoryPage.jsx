@@ -315,30 +315,37 @@ export default function InventoryPage() {
               let product = productMap.get(barcode);
               
               if (product) {
-                // Actualizar solo si hay cambios significativos (opcional, pero mejor siempre actualizar)
-                product = await pb.collection('products').update(product.id, productData);
+                // Actualizar producto existente
+                product = await pb.collection('products').update(product.id, productData, { $autoCancel: false });
               } else {
-                product = await pb.collection('products').create(productData);
+                // Crear producto nuevo
+                product = await pb.collection('products').create(productData, { $autoCancel: false });
                 productMap.set(barcode, product);
               }
 
+              // Buscar si ya tiene un registro en la tabla de inventario
+              const inv = inventoryMap.get(product.id);
+
               // Asegurar que stock nunca sea null/undefined (evita validation_required)
-              const safeStock = parseInt(stock) >= 0 ? parseInt(stock) : 0;
+              const safeStock = !isNaN(stock) ? parseInt(stock) : 0;
 
               if (inv) {
+                // Actualizar stock existente
                 await pb.collection('inventory').update(inv.id, { 
                   stock: safeStock,
                   last_update: new Date()
                 }, { $autoCancel: false });
               } else {
+                // Crear nuevo registro de inventario
                 const invData = {
                   product_id: product.id,
                   stock: safeStock,
                   min_stock: 5,
-                  last_update: new Date()
+                  last_update: new Date(),
+                  branch_id: fBranchId
                 };
-                if (fBranchId) invData.branch_id = fBranchId;
-                await pb.collection('inventory').create(invData, { $autoCancel: false });
+                const newInv = await pb.collection('inventory').create(invData, { $autoCancel: false });
+                inventoryMap.set(product.id, newInv);
               }
               count++;
             } catch (err) {
