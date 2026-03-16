@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,14 +9,79 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useCompany } from '@/modules/core/contexts/CompanyContext.jsx';
 import { useBranch } from '@/modules/core/contexts/BranchContext.jsx';
-import { Building2, Users, Shield, Receipt, CreditCard, Settings, Database, Download } from 'lucide-react';
+import { Building2, Users, Shield, Receipt, CreditCard, Settings, Database, Download, Loader2, CheckCircle2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function ConfigurationPage() {
-  const { company } = useCompany();
-  const { branch } = useBranch();
+  const navigate = useNavigate();
+  const { company, updateCompany } = useCompany();
+  const { branch, updateBranch } = useBranch();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const [formData, setFormData] = React.useState({
+    name: company?.name || '',
+    legal_name: company?.legal_name || '',
+    rfc: company?.rfc || '',
+    phone: company?.phone || '',
+    email: company?.email || '',
+    address: company?.address || ''
+  });
+
+  // Sincronizar con los datos cargados de la empresa
+  React.useEffect(() => {
+    if (company) {
+      setFormData({
+        name: company.name || '',
+        legal_name: company.legal_name || '',
+        rfc: company.rfc || '',
+        phone: company.phone || '',
+        email: company.email || '',
+        address: company.address || ''
+      });
+    }
+  }, [company]);
+
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleSaveGeneral = async () => {
+    if (!company?.id) {
+      toast.error('No hay una empresa activa para actualizar');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await updateCompany(company.id, {
+        name: formData.name,
+        legal_name: formData.legal_name,
+        rfc: formData.rfc,
+        phone: formData.phone,
+        email: formData.email,
+        address: formData.address
+      });
+      toast.success('Configuración general guardada con éxito');
+      
+      // Redirigir al dashboard después de guardar (simula cerrar el cuadro de diálogo)
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1000);
+    } catch (error) {
+      console.error('Error saving config:', error);
+      toast.error('Error al guardar: ' + error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const glassStyle = "bg-slate-900/60 backdrop-blur-2xl border-t border-l border-white/20 border-b border-r border-black/40 shadow-[0_20px_50px_rgba(0,0,0,0.3)] rounded-3xl overflow-hidden";
+  const glassInputStyle = "bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:ring-blue-500/50 focus:border-blue-500/50 h-12 rounded-xl transition-all hover:bg-white/10";
+  const labelStyle = "text-slate-300 font-semibold mb-2 block text-sm";
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
+    <div className="max-w-6xl mx-auto p-6 space-y-8 animate-in fade-in duration-500">
       <div>
         <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Configuración</h1>
         <p className="text-slate-500 mt-1">Administra las preferencias y ajustes de tu sistema POS.</p>
@@ -46,45 +112,98 @@ export default function ConfigurationPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="general">
-          <Card className="border-none shadow-md">
-            <CardHeader>
-              <CardTitle>Ajustes Generales</CardTitle>
-              <CardDescription>Información básica de tu negocio y preferencias regionales.</CardDescription>
+        <TabsContent value="general" className="animate-in slide-in-from-bottom-2 duration-300">
+          <Card className={glassStyle}>
+            <CardHeader className="border-b border-white/5 pb-6">
+              <CardTitle className="text-2xl text-white">Ajustes Generales</CardTitle>
+              <CardDescription className="text-slate-400">Información básica de tu negocio y preferencias regionales.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CardContent className="space-y-6 pt-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
-                  <Label htmlFor="businessName">Nombre Comercial</Label>
-                  <Input id="businessName" defaultValue={company?.name || ''} placeholder="Ej. Mi Tiendita" />
+                  <Label htmlFor="name" className={labelStyle}>Nombre Comercial</Label>
+                  <Input 
+                    id="name" 
+                    value={formData.name} 
+                    onChange={handleChange}
+                    className={glassInputStyle}
+                    placeholder="Ej. Mi Tiendita" 
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="legalName">Razón Social</Label>
-                  <Input id="legalName" placeholder="Ej. Mi Tiendita S.A. de C.V." />
+                  <Label htmlFor="legal_name" className={labelStyle}>Razón Social</Label>
+                  <Input 
+                    id="legal_name" 
+                    value={formData.legal_name}
+                    onChange={handleChange}
+                    className={glassInputStyle}
+                    placeholder="Ej. Mi Tiendita S.A. de C.V." 
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="rfc">RFC / Identificación Fiscal</Label>
-                  <Input id="rfc" placeholder="XAXX010101000" />
+                  <Label htmlFor="rfc" className={labelStyle}>RFC / Identificación Fiscal</Label>
+                  <Input 
+                    id="rfc" 
+                    value={formData.rfc}
+                    onChange={handleChange}
+                    className={glassInputStyle}
+                    placeholder="XAXX010101000" 
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="currency">Moneda Principal</Label>
-                  <Input id="currency" defaultValue="MXN" disabled />
+                  <Label htmlFor="currency" className={labelStyle}>Moneda Principal</Label>
+                  <Input 
+                    id="currency" 
+                    defaultValue="MXN" 
+                    disabled 
+                    className={cn(glassInputStyle, "opacity-50 cursor-not-allowed")}
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Teléfono</Label>
-                  <Input id="phone" type="tel" placeholder="(555) 123-4567" />
+                  <Label htmlFor="phone" className={labelStyle}>Teléfono</Label>
+                  <Input 
+                    id="phone" 
+                    type="tel" 
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className={glassInputStyle}
+                    placeholder="(555) 123-4567" 
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Correo Electrónico</Label>
-                  <Input id="email" type="email" placeholder="contacto@mitiendita.com" />
+                  <Label htmlFor="email" className={labelStyle}>Correo Electrónico</Label>
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    value={formData.email}
+                    onChange={handleChange}
+                    className={glassInputStyle}
+                    placeholder="contacto@mitiendita.com" 
+                  />
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="address">Dirección Principal</Label>
-                  <Input id="address" placeholder="Calle, Número, Colonia, Ciudad, C.P." />
+                  <Label htmlFor="address" className={labelStyle}>Dirección Principal</Label>
+                  <Input 
+                    id="address" 
+                    value={formData.address}
+                    onChange={handleChange}
+                    className={glassInputStyle}
+                    placeholder="Calle, Número, Colonia, Ciudad, C.P." 
+                  />
                 </div>
               </div>
               <div className="flex justify-end pt-4">
-                <Button className="bg-blue-600 hover:bg-blue-700">Guardar Cambios</Button>
+                <Button 
+                  onClick={handleSaveGeneral}
+                  disabled={isSubmitting}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-6 rounded-xl shadow-lg shadow-blue-600/30 transition-all hover:scale-105 active:scale-95"
+                >
+                  {isSubmitting ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Guardando...</>
+                  ) : (
+                    'Guardar Cambios'
+                  )}
+                </Button>
               </div>
             </CardContent>
           </Card>
