@@ -104,6 +104,42 @@ export const CompanyProvider = ({ children }) => {
     }
   };
 
+  const createCompany = async (data) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // 1. Crear la empresa
+      const newCompany = await pb.collection('companies').create(data, { $autoCancel: false });
+      
+      // 2. Crear una sucursal matriz por defecto
+      const mainBranch = await pb.collection('branches').create({
+        company_id: newCompany.id,
+        name: 'Matriz',
+        code: 'MAT',
+        is_main: true
+      }, { $autoCancel: false });
+
+      // 3. Vincular al usuario con la empresa si existe un usuario logueado
+      if (user?.id) {
+        await pb.collection('users').update(user.id, {
+          company_id: newCompany.id
+        });
+      }
+
+      setCompany(newCompany);
+      setCompanies(prev => [...prev, newCompany]);
+      localStorage.setItem('company_id', newCompany.id);
+      localStorage.setItem('branch_id', mainBranch.id);
+      
+      return newCompany;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <CompanyContext.Provider value={{ 
       company, 
@@ -111,7 +147,8 @@ export const CompanyProvider = ({ children }) => {
       isLoading, 
       error, 
       switchCompany, 
-      updateCompany 
+      updateCompany,
+      createCompany 
     }}>
       {children}
     </CompanyContext.Provider>

@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 
 export default function ConfigurationPage() {
   const navigate = useNavigate();
-  const { company, updateCompany } = useCompany();
+  const { company, updateCompany, createCompany } = useCompany();
   const { branch, updateBranch } = useBranch();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -48,22 +48,31 @@ export default function ConfigurationPage() {
   };
 
   const handleSaveGeneral = async () => {
-    if (!company?.id) {
-      toast.error('No hay una empresa activa para actualizar');
-      return;
-    }
-
     setIsSubmitting(true);
     try {
-      await updateCompany(company.id, {
-        name: formData.name,
-        legal_name: formData.legal_name,
-        rfc: formData.rfc,
-        phone: formData.phone,
-        email: formData.email,
-        address: formData.address
-      });
-      toast.success('Configuración general guardada con éxito');
+      if (company?.id) {
+        // Actualizar empresa existente
+        await updateCompany(company.id, {
+          name: formData.name,
+          legal_name: formData.legal_name,
+          rfc: formData.rfc,
+          phone: formData.phone,
+          email: formData.email,
+          address: formData.address
+        });
+        toast.success('Configuración general actualizada');
+      } else {
+        // Crear nueva empresa por primera vez
+        await createCompany({
+          name: formData.name,
+          legal_name: formData.legal_name,
+          rfc: formData.rfc,
+          phone: formData.phone,
+          email: formData.email,
+          address: formData.address
+        });
+        toast.success('Empresa registrada con éxito');
+      }
       
       // Redirigir al dashboard después de guardar (simula cerrar el cuadro de diálogo)
       setTimeout(() => {
