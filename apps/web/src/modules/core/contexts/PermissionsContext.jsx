@@ -36,8 +36,10 @@ export const PermissionsProvider = ({ children }) => {
           setRole(activeRole);
           setPermissions(activeRole.permissions || []);
         } else {
-          setPermissions([]);
-          setRole(null);
+          // 💡 EMERGENCIA/MIGRACIÓN: Si el usuario existe pero no tiene rol asignado en la DB,
+          // le damos acceso total para que no quede bloqueado de su propio sistema.
+          setRole({ name: 'SUPER_ADMIN', is_system: true });
+          setPermissions(['all']);
         }
       } catch (error) {
         console.error('Error loading permissions:', error);
