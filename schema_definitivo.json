@@ -1,0 +1,71 @@
+[
+  {
+    "name": "roles",
+    "type": "base",
+    "schema": [
+      { "name": "name", "type": "text", "required": true, "unique": true }
+    ],
+    "listRule": "", "viewRule": "", "createRule": "", "updateRule": "", "deleteRule": ""
+  },
+  {
+    "name": "companies",
+    "type": "base",
+    "schema": [
+      { "name": "name", "type": "text", "required": true },
+      { "name": "slug", "type": "text", "required": true, "unique": true },
+      { "name": "logo", "type": "file", "options": { "maxSelect": 1 } }
+    ],
+    "listRule": "", "viewRule": "", "createRule": "", "updateRule": "", "deleteRule": ""
+  },
+  {
+    "name": "branches",
+    "type": "base",
+    "schema": [
+      { "name": "company_id", "type": "relation", "options": { "collectionId": "companies", "maxSelect": 1 } },
+      { "name": "name", "type": "text", "required": true },
+      { "name": "code", "type": "text", "required": true }
+    ],
+    "listRule": "", "viewRule": "", "createRule": "", "updateRule": "", "deleteRule": ""
+  },
+  {
+    "name": "products",
+    "type": "base",
+    "schema": [
+      { "name": "barcode", "type": "text" },
+      { "name": "name", "type": "text", "required": true },
+      { "name": "price", "type": "number", "required": true },
+      { "name": "category", "type": "text" },
+      { "name": "provider", "type": "text" },
+      { "name": "company_id", "type": "relation", "options": { "collectionId": "companies", "maxSelect": 1 } }
+    ],
+    "listRule": "", "viewRule": "", "createRule": "", "updateRule": "", "deleteRule": ""
+  },
+  {
+    "name": "inventory",
+    "type": "base",
+    "schema": [
+      { "name": "product_id", "type": "relation", "options": { "collectionId": "products", "maxSelect": 1 } },
+      { "name": "branch_id", "type": "relation", "options": { "collectionId": "branches", "maxSelect": 1 } },
+      { "name": "stock", "type": "number", "required": true }
+    ],
+    "listRule": "", "viewRule": "", "createRule": "", "updateRule": "", "deleteRule": ""
+  },
+  {
+    "name": "sales",
+    "type": "base",
+    "schema": [
+      { "name": "ticket_number", "type": "text", "required": true },
+      { "name": "total", "type": "number", "required": true },
+      { "name": "payment_method", "type": "text" }
+    ],
+    "listRule": "", "viewRule": "", "createRule": "", "updateRule": "", "deleteRule": ""
+  },
+  {
+    "name": "users",
+    "type": "auth",
+    "schema": [
+      { "name": "name", "type": "text" }
+    ],
+    "listRule": "", "viewRule": "", "createRule": "", "updateRule": "", "deleteRule": ""
+  }
+]

@@ -77,7 +77,12 @@ export default function RegisterPage() {
     setIsSubmitting(true);
     
     try {
-      await register(formData.email, formData.password, formData.name);
+      await register({
+        email: formData.email,
+        password: formData.password,
+        passwordConfirm: formData.confirmPassword,
+        name: formData.name,
+      });
       
       setSuccessMessage('¡Cuenta creada con éxito! Preparando tu entorno...');
       setFormData({ name: '', email: '', password: '', confirmPassword: '' });

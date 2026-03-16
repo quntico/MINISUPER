@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useCompany } from '@/modules/core/contexts/CompanyContext.jsx';
 import { useBranch } from '@/modules/core/contexts/BranchContext.jsx';
-import { Building2, Users, Shield, Receipt, CreditCard, Settings } from 'lucide-react';
+import { Building2, Users, Shield, Receipt, CreditCard, Settings, Database, Download } from 'lucide-react';
 
 export default function ConfigurationPage() {
   const { company } = useCompany();
@@ -40,6 +40,9 @@ export default function ConfigurationPage() {
           </TabsTrigger>
           <TabsTrigger value="pago" className="py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg">
             <CreditCard className="w-4 h-4 mr-2" /> Pago
+          </TabsTrigger>
+          <TabsTrigger value="mantenimiento" className="py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg text-orange-600">
+            <Database className="w-4 h-4 mr-2" /> Mantenimiento
           </TabsTrigger>
         </TabsList>
 
@@ -207,6 +210,48 @@ export default function ConfigurationPage() {
               </div>
               <div className="flex justify-end pt-4">
                 <Button className="bg-blue-600 hover:bg-blue-700">Guardar Métodos</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="mantenimiento">
+          <Card className="border-2 border-orange-100 bg-orange-50/10">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-orange-700">
+                <Database className="w-6 h-6" /> Herramientas de Migración
+              </CardTitle>
+              <CardDescription>Usa estas herramientas para mover tu base de datos a un servidor en la nube.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-4 bg-white border border-orange-200 rounded-xl space-y-4">
+                <h4 className="font-bold text-slate-800">Exportar Esquema (JSON)</h4>
+                <p className="text-sm text-slate-600">Este archivo contiene la estructura de tus tablas (usuarios, productos, inventario). Es indispensable para configurar PocketHost.</p>
+                <Button 
+                  onClick={() => {
+                    const schema = [
+                      { "name": "users", "type": "auth" },
+                      { "name": "companies", "type": "base", "schema": [{ "name": "name", "type": "text", "required": true }, { "name": "logo", "type": "file" }] },
+                      { "name": "branches", "type": "base", "schema": [{ "name": "company_id", "type": "relation", "options": { "collectionId": "companies" } }, { "name": "name", "type": "text", "required": true }] },
+                      { "name": "products", "type": "base", "schema": [{ "name": "company_id", "type": "relation", "options": { "collectionId": "companies" } }, { "name": "barcode", "type": "text" }, { "name": "name", "type": "text", "required": true }, { "name": "category", "type": "text" }, { "name": "provider", "type": "text" }, { "name": "price", "type": "number", "required": true }] },
+                      { "name": "inventory", "type": "base", "schema": [{ "name": "product_id", "type": "relation", "options": { "collectionId": "products" } }, { "name": "branch_id", "type": "relation", "options": { "collectionId": "branches" } }, { "name": "stock", "type": "number", "required": true }] }
+                    ];
+                    const blob = new Blob([JSON.stringify(schema, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = 'pocketbase_schema.json';
+                    link.click();
+                  }}
+                  className="bg-orange-600 hover:bg-orange-700 flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" /> Descargar Archivo JSON
+                </Button>
+              </div>
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                <p className="text-xs text-blue-700 leading-relaxed">
+                  <strong>Instrucciones:</strong> Una vez descargado el archivo, ve al panel de Administración de PocketHost (Settings &gt; Import collections) y simplemente arrastra este archivo o haz clic en "Load from JSON file".
+                </p>
               </div>
             </CardContent>
           </Card>
