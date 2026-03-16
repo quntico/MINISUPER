@@ -145,8 +145,8 @@ export const Sidebar = () => {
   ];
 
   const renderNavLink = (item) => {
-    if (!canAccess(item.module) && item.module !== 'dashboard') return null;
-
+    // 🔓 MODO LIBRE: Durante esta fase de migración, permitimos ver todos los botones
+    // para asegurar que el usuario nunca quede atrapado sin poder configurar.
     const isActive = location.pathname === item.path || 
                     (item.path !== '/' && location.pathname.startsWith(item.path));
 
